@@ -21,7 +21,7 @@ services:
     volumes:
       - /app/node_modules
       - .:/app
-    command: ["yarn", "test"]
+    command: ["yarn", "test-watch"]
   mongo-db:
     image: mongo
     ports:

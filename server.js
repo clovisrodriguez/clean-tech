@@ -1,36 +1,24 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const app = express();
-const connectDatabase = require("./utils/database");
+const errorMiddleware = require("./middlewares/errors");
+const ErrorHandler = require("./utils/errorHandler");
+const { createPurchase, createSale } = require("./controllers/appController");
 
-//Config environment
-dotenv.config({ path: "./.env" });
+const API_BASE = "/api/v1";
 
-//Connect to Database
-connectDatabase();
+// Setup JSON parseurl
+app.use(express.json());
 
-// Handling Uncaught Exception
-process.on("uncaughtException", (err) => {
-  console.error(`ERROR: ${err.message}`);
-  console.error("Shutting down due to uncaught exception");
-  process.exit(1);
+app.route(`${API_BASE}/purchase`).post(createPurchase);
+
+app.route(`${API_BASE}/sale`).post(createSale);
+
+app.all("*", (req, res, next) => {
+  next(new ErrorHandler(`${req.originalUrl} route not found.`, 404));
 });
 
-app.get("/", (req, res) => res.status(200).json({ hello: "hi" }));
+// Middleware to handle errors
+app.use(errorMiddleware);
 
-//Start server
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(
-    `Server Starting on server ${PORT} on ${process.env.NODE_ENV} mode.`
-  );
-});
-
-// Handling Unahndled Promise Rejection
-process.on("unhandledRejection", (err) => {
-  console.error(`Error: ${err.message}`);
-  console.error(`Shutting down the server due to unhandled promise rejection.`);
-  server.close(() => {
-    process.exit(1);
-  });
-});
+// Export app before start listening
+module.exports = app;
